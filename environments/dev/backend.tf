@@ -15,7 +15,8 @@
 
 terraform {
   backend "gcs" {
-    bucket = "PROJECT_ID-tfstate"
+    credentials = "covid-19-ipv-sa.json"
+    bucket = "covid19-tf-state"
     prefix = "env/dev"
   }
 }

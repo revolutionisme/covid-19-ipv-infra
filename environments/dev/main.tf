@@ -14,27 +14,54 @@
 
 
 locals {
-  "env" = "dev"
+  env = "dev"
 }
 
 provider "google" {
-  project = "${var.project}"
+  project = var.project
+  credentials = "covid-19-ipv-sa.json"
 }
 
-module "vpc" {
-  source  = "../../modules/vpc"
-  project = "${var.project}"
-  env     = "${local.env}"
+
+module "bucket-data-bucket" {
+  # source  = "git::https://github.com/terraform-google-modules/terraform-google-cloud-storage.git//modules/simple_bucket?ref=v1.6.0"
+  source = "terraform-google-modules/cloud-storage/google//modules/simple_bucket"
+  version = "1.6.0"
+
+  name       = "covid-19-ipv-data"
+  project_id = var.project
+  location   = "europe-west3"
+  versioning = "true"
+  # iam_members = [{
+  #   role   = "roles/storage.viewer"
+  #   member = "user:example-user@example.com"
+  # }]
 }
 
-module "http_server" {
-  source  = "../../modules/http_server"
-  project = "${var.project}"
-  subnet  = "${module.vpc.subnet}"
+module "sql-db" {
+  project_id = var.project
+  region = "europe-west3"
+  zone   = "a"
+  database_version = "12"
+  name = "covid-19-db-test-0"
+  source  = "GoogleCloudPlatform/sql-db/google//modules/postgresql"
+  version = "3.1.0"
 }
 
-module "firewall" {
-  source  = "../../modules/firewall"
-  project = "${var.project}"
-  subnet  = "${module.vpc.subnet}"
-}
+# module "vpc" {
+#   source  = "../../modules/vpc"
+#   project = var.project
+#   env     = local.env
+# }
+
+# module "http_server" {
+#   source  = "../../modules/http_server"
+#   project = var.project
+#   subnet  = module.vpc.subnet
+# }
+
+# module "firewall" {
+#   source  = "../../modules/firewall"
+#   project = var.project
+#   subnet  = module.vpc.subnet
+# }
