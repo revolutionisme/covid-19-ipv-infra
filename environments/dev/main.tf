@@ -39,13 +39,27 @@ module "bucket-data-bucket" {
 }
 
 module "sql-db" {
+  source  = "GoogleCloudPlatform/sql-db/google//modules/postgresql"
   project_id = var.project
   region = "europe-west3"
   zone   = "a"
-  database_version = "12"
-  name = "covid-19-db-test-0"
-  source  = "GoogleCloudPlatform/sql-db/google//modules/postgresql"
+  name = "covid-19"
+  user_name = "dbadmin"
+  db_name = "covid_19_db"
+  database_version = "POSTGRES_12"
   version = "3.1.0"
+}
+
+resource "google_secret_manager_secret" "secret-basic" {
+  secret_id = "covid-19-db-conn-string"
+  replication {
+    automatic = true
+  }
+}
+
+resource "google_secret_manager_secret_version" "secret-version-basic" {
+  secret = google_secret_manager_secret.secret-basic.id
+  secret_data = "postgresql://dbadmin:${module.sql-db.generated_user_password}@${module.sql-db.public_ip_address}:5432/covid_19_db"
 }
 
 # module "vpc" {

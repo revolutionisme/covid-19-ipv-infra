@@ -32,3 +32,13 @@
 # output "external_ip" {
 #   value = "${module.http_server.external_ip}"
 # }
+
+output "instance_name" {
+  value       = module.sql-db.instance_name
+  description = "The instance name for the master instance"
+}
+
+output "public_ip_address" {
+  description = "The first public (PRIMARY) IPv4 address assigned for the master instance"
+  value       = module.sql-db.public_ip_address
+}
