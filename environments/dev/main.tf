@@ -38,6 +38,8 @@ module "bucket-data-bucket" {
   # }]
 }
 
+# TODO: Setup network configuration to permit application to access db, start with 0.0.0.0
+# TODOL Setup biggern instances for DB
 module "sql-db" {
   source  = "GoogleCloudPlatform/sql-db/google//modules/postgresql"
   project_id = var.project
@@ -59,7 +61,7 @@ resource "google_secret_manager_secret" "secret-basic" {
 
 resource "google_secret_manager_secret_version" "secret-version-basic" {
   secret = google_secret_manager_secret.secret-basic.id
-  secret_data = "postgresql://dbadmin:${module.sql-db.generated_user_password}@${module.sql-db.public_ip_address}:5432/covid_19_db"
+  secret_data = "postgresql+psycopg2://dbadmin:${module.sql-db.generated_user_password}@${module.sql-db.public_ip_address}:5432/covid_19_db"
 }
 
 # module "vpc" {
