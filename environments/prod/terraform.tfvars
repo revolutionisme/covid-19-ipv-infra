@@ -1,1 +1,1 @@
-project="PROJECT_ID"
+project="covid-19-ipv"
