@@ -1,3 +1,4 @@
 .terraform*
 *.tfstate*
 *.tfplan
+covid-19-ipv-sa.json
