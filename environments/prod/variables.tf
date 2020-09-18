@@ -14,3 +14,14 @@
 
 
 variable "project" {}
+
+variable "pg_access_cidr_range" {
+  type        = string
+  description = "The ip range to allow connecting from/to Cloud SQL"
+  default     = "0.0.0.0/0"
+}
+
+variable "db_name" {
+  description = "The database name for the instance"
+  default     = "covid_19_db"
+}
