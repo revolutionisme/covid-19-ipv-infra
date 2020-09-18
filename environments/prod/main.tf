@@ -1,40 +1,58 @@
-# Copyright 2019 Google LLC
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     https://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-
-
 locals {
-  "env" = "prod"
+  env = "prod"
 }
 
-provider "google" {
-  project = "${var.project}"
+provider "google-beta" {
+  credentials = file("covid-19-ipv-sa.json")
+  project     = var.project
 }
 
-module "vpc" {
-  source  = "../../modules/vpc"
-  project = "${var.project}"
-  env     = "${local.env}"
+module "bucket-data-bucket" {
+  source = "terraform-google-modules/cloud-storage/google//modules/simple_bucket"
+
+  name       = "covid-19-ipv-data"
+  project_id = var.project
+  location   = "europe-west3"
+  versioning = "true"
+  # iam_members = [{
+  #   role   = "roles/storage.viewer"
+  #   member = "user:example-user@example.com"
+  # }]
 }
 
-module "http_server" {
-  source  = "../../modules/http_server"
-  project = "${var.project}"
-  subnet  = "${module.vpc.subnet}"
+# TODO: Setup network configuration to permit application to access db, start with 0.0.0.0
+# TODOL Setup biggern instances for DB
+module "sql-db" {
+  source           = "GoogleCloudPlatform/sql-db/google//modules/postgresql"
+  project_id       = var.project
+  region           = "europe-west3"
+  zone             = "a"
+  name             = "covid-19"
+  user_name        = "dbadmin"
+  db_name          = var.db_name
+  database_version = "POSTGRES_12"
+  tier             = "db-custom-4-15360"
+  ip_configuration = {
+    ipv4_enabled    = true
+    require_ssl     = false
+    private_network = null
+    authorized_networks = [
+      {
+        name  = "${var.project}-cidr"
+        value = var.pg_access_cidr_range
+      },
+    ]
+  }
 }
 
-module "firewall" {
-  source  = "../../modules/firewall"
-  project = "${var.project}"
-  subnet  = "${module.vpc.subnet}"
+resource "google_secret_manager_secret" "secret-basic" {
+  secret_id = "covid-19-db-conn-string"
+  replication {
+    automatic = true
+  }
+}
+
+resource "google_secret_manager_secret_version" "secret-version-basic" {
+  secret      = google_secret_manager_secret.secret-basic.id
+  secret_data = "postgresql+psycopg2://dbadmin:${module.sql-db.generated_user_password}@${module.sql-db.public_ip_address}:5432/${var.db_name}"
 }

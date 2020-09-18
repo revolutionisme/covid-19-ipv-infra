@@ -13,22 +13,32 @@
 # limitations under the License.
 
 
-output "network" {
-  value = "${module.vpc.network}"
-}
+# output "network" {
+#   value = "${module.vpc.network}"
+# }
 
-output "subnet" {
-  value = "${module.vpc.subnet}"
-}
+# output "subnet" {
+#   value = "${module.vpc.subnet}"
+# }
 
-output "firewall_rule" {
-  value = "${module.firewall.firewall_rule}"
-}
+# output "firewall_rule" {
+#   value = "${module.firewall.firewall_rule}"
+# }
+
+# output "instance_name" {
+#   value = "${module.http_server.instance_name}"
+# }
+
+# output "external_ip" {
+#   value = "${module.http_server.external_ip}"
+# }
 
 output "instance_name" {
-  value = "${module.http_server.instance_name}"
+  value       = module.sql-db.instance_name
+  description = "The instance name for the master instance"
 }
 
-output "external_ip" {
-  value = "${module.http_server.external_ip}"
+output "public_ip_address" {
+  description = "The first public (PRIMARY) IPv4 address assigned for the master instance"
+  value       = module.sql-db.public_ip_address
 }
